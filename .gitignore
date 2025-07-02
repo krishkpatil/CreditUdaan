@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Model and data
+*.pt
+*.pkl
+temp_uploaded.pdf
+
+# Logs
+*.log
+
+# React build
+frontend/dist/
