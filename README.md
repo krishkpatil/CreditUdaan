@@ -1,6 +1,12 @@
 # 🚀 Credit Udaan
 
 Credit Udaan is a modern, AI-powered credit analysis web application designed to help users in India understand, improve, and plan their credit journey. It allows users to upload their CIBIL report, analyze it with an AI backend, and receive actionable insights along with a simulated credit score. The app also provides easy subscription options via integrated payment gateways.
+![[Home](https://github.com/user-attachments/assets/0ab5e833-8a7c-4667-8f27-0db538128df8)
+![Live Score](https://github.com/user-attachments/assets/547f3ded-3a6c-4d45-9b69-35801a3fe64e)
+![Upload](https://github.com/user-attachments/assets/fafa8b73-68e9-47cd-802f-73c5cdac9a2e)
+
+![Pricing](https://github.com/user-attachments/assets/d5cb1917-e6bd-46c9-a198-a1042b45013b)
+
 
 ---
 
