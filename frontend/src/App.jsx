@@ -9,7 +9,7 @@ import Navbar from "./components/Navbar";
 /**
  * App.jsx
  *
- * Main entry for ScoreLift React app.
+ * Main entry for CreditUdaan React app.
  *
  * Backend integration notes:
  * - The UploadPage should POST the PDF to the Flask backend at /upload (see UploadPage.jsx for fetch example).

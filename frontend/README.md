@@ -1,6 +1,6 @@
-# ScoreLift Frontend
+# CreditUdaan Frontend
 
-This is a React + TailwindCSS frontend for ScoreLift, a credit analysis platform for India.
+This is a React + TailwindCSS frontend for CreditUdaan, a credit analysis platform for India.
 
 ## Features
 - Landing page with hero section, CTA, testimonials
@@ -49,4 +49,4 @@ Tailwind is preconfigured. All styling is via Tailwind utility classes.
 
 ---
 
-Built with ❤️ for ScoreLift.
+Built with ❤️ for CreditUdaan.

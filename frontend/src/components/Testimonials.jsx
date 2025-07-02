@@ -11,7 +11,7 @@ const testimonials = [
   {
     name: "Amit S.",
     avatar: avatar1,
-    text: "ScoreLift helped me understand my credit score and improve it in just a month! Highly recommended.",
+    text: "CreditUdaan helped me understand my credit score and improve it in just a month! Highly recommended.",
   },
   {
     name: "Priya R.",
