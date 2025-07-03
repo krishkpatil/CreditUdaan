@@ -1,5 +1,6 @@
 import os
 import torch
+import requests
 import numpy as np
 import pickle
 from flask import Flask, request, jsonify
@@ -9,7 +10,11 @@ import PyPDF2
 import re
 import json
 from dotenv import load_dotenv
-import os
+import logging
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Define the model class (must match model.py)
 import torch.nn as nn
@@ -32,9 +37,15 @@ class CreditScoreNet(nn.Module):
         return scaled * (self.output_max - self.output_min) + self.output_min
 
 # Model feature order
+# Updated feature order to match new model and synthetic data
 MODEL_FEATURES = [
     "credit_utilization",
     "open_accounts",
+    "closed_accounts",
+    "account_age_years",
+    "credit_card_count",
+    "loan_count",
+    "recent_inquiries",
     "missed_payments",
     "monthly_rent",
     "active_subscriptions"
@@ -46,11 +57,35 @@ if os.path.exists("scaler.pkl"):
     with open("scaler.pkl", "rb") as f:
         scaler = pickle.load(f)
 
+# Download model and scaler from Hugging Face if not present
+MODEL_URL = "https://huggingface.co/krishkpatil/creditudaan/resolve/main/credit_score_model.pt"
+SCALER_URL = "https://huggingface.co/krishkpatil/creditudaan/resolve/main/scaler.pkl"
+MODEL_PATH = "credit_score_model.pt"
+SCALER_PATH = "scaler.pkl"
+
+def download_file(url, path, desc):
+    if not os.path.exists(path):
+        logger.info(f"Downloading {desc} from Hugging Face...")
+        r = requests.get(url)
+        r.raise_for_status()
+        with open(path, "wb") as f:
+            f.write(r.content)
+        logger.info(f"{desc.capitalize()} downloaded.")
+
+# Download model and scaler on startup
+
+download_file(MODEL_URL, MODEL_PATH, "model")
+download_file(SCALER_URL, SCALER_PATH, "scaler")
+
+# Load scaler
+scaler = None
+if os.path.exists(SCALER_PATH):
+    with open(SCALER_PATH, "rb") as f:
+        scaler = pickle.load(f)
+
 # Load model
-model_path = "credit_score_model.pt"
-input_dim = 5
-model = CreditScoreNet(input_dim)
-model.load_state_dict(torch.load(model_path, map_location="cpu"))
+model = CreditScoreNet(input_dim=10)
+model.load_state_dict(torch.load(MODEL_PATH, map_location=torch.device('cpu')))
 model.eval()
 
 # Flask app
@@ -117,19 +152,19 @@ def api_auto_analysis():
         # Extract text and features
         text = extract_text_from_pdf(temp_path)
         info = extract_credit_info(text)
-        # Prepare features for model
-        features = [
-            info.get('credit_utilization_percent') or 0,
-            info.get('number_of_open_accounts') or 0,
-            info.get('missed_payments') or 0,
-            20000,  # Placeholder for monthly_rent
-            2       # Placeholder for active_subscriptions
-        ]
+        # Prepare features for model (robust, in correct order)
+        features = []
+        for feat in MODEL_FEATURES:
+            val = info.get(feat, 0)
+            if val is None:
+                val = 0
+            features.append(val)
         if scaler:
-            features = scaler.transform([features])[0]
-        features = np.array(features, dtype=np.float32).reshape(1, -1)
+            features_scaled = scaler.transform([features])[0]
+        else:
+            features_scaled = features
         with torch.no_grad():
-            x = torch.tensor(features, dtype=torch.float32)
+            x = torch.tensor(features_scaled, dtype=torch.float32).reshape(1, -1)
             model_score = model(x).item()
         # OpenAI analysis using GPT-4o and JSON schema
         def analyze_credit_report(text):

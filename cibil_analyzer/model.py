@@ -35,6 +35,7 @@ def set_seed(seed=42):
 class CreditScoreNet(nn.Module):
     def __init__(self, input_dim):
         super().__init__()
+        # Match original architecture: 3 linear layers, no dropout
         self.net = nn.Sequential(
             nn.Linear(input_dim, 32),
             nn.ReLU(),
@@ -50,6 +51,10 @@ class CreditScoreNet(nn.Module):
         raw = self.net(x)
         scaled = torch.sigmoid(raw)  # [0, 1]
         return scaled * (self.output_max - self.output_min) + self.output_min
+
+# NOTE: Update input_dim to match the number of features used in generate_synthetic_data.py and credit_analyzer.py.
+# Features: credit_utilization, open_accounts, closed_accounts, account_age_years, credit_card_count, loan_count, recent_inquiries, missed_payments, monthly_rent, active_subscriptions (exclude 'race' for prediction)
+# Retrain your model after updating the feature set, then upload the new .pt file to Hugging Face.
 
 # Custom loss: RMSE + fairness penalty (correlation with race)
 def fairness_loss(preds, targets, race_tensor, lambda_fair=0.1):

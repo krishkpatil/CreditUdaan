@@ -17,12 +17,14 @@ __pycache__/
 node_modules/
 
 # Model and data
-
+*.pt
+*.pkl
 temp_uploaded.pdf
-
+*.csv
 # Logs
 *.log
 
 # React build
 frontend/dist/
 
+CIBIL REPORT.pdf

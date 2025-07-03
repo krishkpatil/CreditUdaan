@@ -39,35 +39,44 @@ def extract_text_from_pdf(pdf_path: str) -> str:
 
 def extract_credit_info(text: str) -> Dict[str, Any]:
     """
-    Extracts credit utilization, number of open accounts, and payment history from CIBIL report text.
-    This uses common patterns in Indian CIBIL reports. Adjust regexes as needed for your reports.
+    Enhanced extraction: credit utilization, open/closed accounts, account age, missed/late payments, credit card count, loan count, recent inquiries, DPD.
     """
     info = {}
-
-    # Credit Utilization (look for % or INR usage)
+    # Credit Utilization
     util_match = re.search(r"Credit Utilization(?:\s*):(?:\s*)([\d,.]+)%", text, re.IGNORECASE)
     if util_match:
         info['credit_utilization_percent'] = float(util_match.group(1).replace(',', ''))
     else:
-        # Try alternate pattern (e.g., 'Utilization: 45%')
         util_match = re.search(r"Utilization(?:\s*):(?:\s*)([\d,.]+)%", text, re.IGNORECASE)
-        if util_match:
-            info['credit_utilization_percent'] = float(util_match.group(1).replace(',', ''))
-        else:
-            info['credit_utilization_percent'] = None
-
-    # Number of Open Accounts (look for 'Open Accounts: N' or table)
+        info['credit_utilization_percent'] = float(util_match.group(1).replace(',', '')) if util_match else None
+    # Open Accounts
     open_acc_match = re.search(r"Open Accounts(?:\s*):(?:\s*)(\d+)", text, re.IGNORECASE)
     if open_acc_match:
         info['number_of_open_accounts'] = int(open_acc_match.group(1))
     else:
-        # Try counting lines like 'Account Type: ... Status: Open'
         open_accs = re.findall(r"Status\s*:\s*Open", text, re.IGNORECASE)
         info['number_of_open_accounts'] = len(open_accs)
-
-    # Payment History (look for late/missed payments or DPD tables)
+    # Closed Accounts
+    closed_accs = re.findall(r"Status\s*:\s*Closed", text, re.IGNORECASE)
+    info['number_of_closed_accounts'] = len(closed_accs)
+    # Account Age (years, fallback to months)
+    age_match = re.search(r"Account Age(?:\s*):(?:\s*)([\d,.]+)\s*yrs", text, re.IGNORECASE)
+    if age_match:
+        info['account_age_years'] = float(age_match.group(1).replace(',', ''))
+    else:
+        age_match = re.search(r"Account Age(?:\s*):(?:\s*)([\d,.]+)\s*months", text, re.IGNORECASE)
+        info['account_age_years'] = float(age_match.group(1).replace(',', ''))/12 if age_match else None
+    # Credit Card Count
+    cc_match = re.search(r"Credit Card(?:\s*):(?:\s*)(\d+)", text, re.IGNORECASE)
+    info['credit_card_count'] = int(cc_match.group(1)) if cc_match else len(re.findall(r"Credit Card", text, re.IGNORECASE))
+    # Loan Count
+    loan_match = re.search(r"Loan(?:\s*):(?:\s*)(\d+)", text, re.IGNORECASE)
+    info['loan_count'] = int(loan_match.group(1)) if loan_match else len(re.findall(r"Loan", text, re.IGNORECASE))
+    # Recent Inquiries
+    inquiries = re.findall(r"Enquiry Date", text, re.IGNORECASE)
+    info['recent_inquiries'] = len(inquiries)
+    # Payment History (DPD, late/missed)
     payment_history = []
-    # Example: 'DPD: 000 000 030 000' or 'Late Payment: 2 times'
     dpd_lines = re.findall(r"DPD\s*:\s*([0-9\s]+)", text)
     for dpd in dpd_lines:
         months = [int(x) for x in dpd.strip().split() if x.isdigit()]
@@ -75,9 +84,26 @@ def extract_credit_info(text: str) -> Dict[str, Any]:
     late_pay_match = re.search(r"Late Payment(?:s)?\s*:\s*(\d+)", text, re.IGNORECASE)
     if late_pay_match:
         payment_history.append({'late_payments': int(late_pay_match.group(1))})
+    missed_pay_match = re.search(r"Missed Payment(?:s)?\s*:\s*(\d+)", text, re.IGNORECASE)
+    if missed_pay_match:
+        payment_history.append({'missed_payments': int(missed_pay_match.group(1))})
     info['payment_history'] = payment_history if payment_history else None
-
     return info
+
+# TEST FUNCTION: For local validation
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1].endswith('.pdf'):
+        from PyPDF2 import PdfReader
+        pdf_path = sys.argv[1]
+        text = ""
+        with open(pdf_path, 'rb') as file:
+            reader = PdfReader(file)
+            for page in reader.pages:
+                text += page.extract_text() or ""
+        features = extract_credit_info(text)
+        print("Extracted features:\n", features)
+
 
 def extract_subscriptions(text: str) -> List[str]:
     """
