@@ -18,7 +18,7 @@ const UploadPage = () => {
     setLoading(true);
     const formData = new FormData();
     formData.append('pdf', file);
-    fetch('http://localhost:5001/api/auto_analysis', {
+    fetch('https://creditudaan-backend.onrender.com/api/auto_analysis', {
       method: 'POST',
       body: formData,
     })

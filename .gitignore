@@ -17,8 +17,7 @@ __pycache__/
 node_modules/
 
 # Model and data
-*.pt
-*.pkl
+
 temp_uploaded.pdf
 
 # Logs
